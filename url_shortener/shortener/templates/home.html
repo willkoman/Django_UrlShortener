@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<h1>URL Shortener</h1>
+<form method="post">
+    {% csrf_token %}
+    <input type="url" name="original_url" placeholder="Enter your URL" required>
+    <button type="submit" class="btn btn-primary">Shorten</button>
+</form>
+{% if short_url %}
+<p>Shortened URL: <a href="{{ short_url }}">{{ short_url }}</a></p>
+{% endif %}
+{% if urls %}
+
+{% if username %}
+<h2>{{ username }}'s Shortened URLs</h2>
+{% else %}
+<h2>Anonymous Shortened URLs</h2>
+{% endif %}
+<table class="table">
+    <thead>
+    <tr>
+        <th>Shortened URL</th>
+        <th>Original URL</th>
+        <th>Created At</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for url in urls %}
+    <tr>
+        <td><a href="{{ url.short_url }}" target="_blank">{{ url.short_url }}</a></td>
+        <td>{{ url.original_url }}</td>
+        <td>{{ url.created_at }}</td>
+        <td>
+            <!--copy button that copies current url +/short_url to clipboard-->
+            <button class="btn btn-primary"
+                    onclick="showQRCodeModal('{{ request.build_absolute_uri }}{{ url.short_url }}', {% if url.qr_code %} '{{ url.qr_code.url }}' {% else %} '' {% endif %} )">
+                Copy
+            </button>
+            {% if username %}
+            <a href="/delete/{{ url.id }}" class="btn btn-danger">Delete</a>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<!-- Modal HTML -->
+<div class="modal fade" id="qrCodeModal" tabindex="-1" aria-labelledby="qrCodeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="qrCodeModalLabel">QR Code</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <img id="qrCodeImage" src="" alt="QR Code" width="200">
+                <p id="shortUrlText"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="copyToClipboard()">Copy URL</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showQRCodeModal(shortUrl, qrCodeUrl) {
+        document.getElementById('qrCodeImage').src = qrCodeUrl;
+        document.getElementById('shortUrlText').innerText = shortUrl;
+        var qrCodeModal = new bootstrap.Modal(document.getElementById('qrCodeModal'));
+        qrCodeModal.show();
+    }
+
+    function copyToClipboard(text) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text).then(function () {
+                // alert('Copied to clipboard');
+            }).catch(function (error) {
+                // alert('Failed to copy: ' + error);
+            });
+        } else {
+            // Fallback for older browsers
+            var textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                // alert('Copied to clipboard');
+            } catch (err) {
+                // alert('Failed to copy: ' + err);
+            }
+            document.body.removeChild(textarea);
+        }
+    }
+</script>
+{% endblock %}
