@@ -58,46 +58,62 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <img id="qrCodeImage" src="" alt="QR Code" width="200">
-                <p id="shortUrlText"></p>
+                <img id="qrCodeImage" src="" alt="QR Code" width="200" class="d-block mx-auto">
+                <div class="input-group mt-3">
+                    <input type="text" class="form-control" id="shortUrlText" readonly>
+                    <button id="copyButton" type="button" class="btn btn-primary" onclick="copyToClipboard()">Copy</button>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="copyToClipboard(document.getElementById('shortUrlText').innerText)">Copy</button>
             </div>
         </div>
     </div>
 </div>
 
+
 <script>
     function showQRCodeModal(shortUrl, qrCodeUrl) {
         document.getElementById('qrCodeImage').src = qrCodeUrl;
-        document.getElementById('shortUrlText').innerText = shortUrl;
+        document.getElementById('shortUrlText').value = shortUrl;
+        document.getElementById('copyButton').onclick = function () {
+            copyToClipboard(shortUrl);
+        };
         var qrCodeModal = new bootstrap.Modal(document.getElementById('qrCodeModal'));
         qrCodeModal.show();
     }
 
-    function copyToClipboard(text) {
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(text).then(function () {
-                // alert('Copied to clipboard');
-            }).catch(function (error) {
-                // alert('Failed to copy: ' + error);
+function copyToClipboard() {
+    const input = document.getElementById('shortUrlText');
+    if (input) {
+        if (navigator.clipboard && window.isSecureContext) {
+            // navigator.clipboard is available and the context is secure
+            navigator.clipboard.writeText(input.value).then(() => {
+                console.log('Text successfully copied to clipboard');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
             });
         } else {
-            // Fallback for older browsers
-            var textarea = document.createElement('textarea');
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
+            // Fallback method for older browsers
+            input.select();
             try {
-                document.execCommand('copy');
-                // alert('Copied to clipboard');
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    console.log('Text successfully copied to clipboard');
+                } else {
+                    console.error('Failed to copy text');
+                }
             } catch (err) {
-                // alert('Failed to copy: ' + err);
+                console.error('Error copying text: ', err);
             }
-            document.body.removeChild(textarea);
+            // Remove selection after copy
+            input.setSelectionRange(0, 0);
         }
     }
+}
+
+
+
+
 </script>
 {% endblock %}
