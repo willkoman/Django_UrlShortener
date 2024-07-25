@@ -24,6 +24,7 @@
         <th>Shortened URL</th>
         <th>Original URL</th>
         <th>Created At</th>
+        <th>Visits</th>
         <th>Actions</th>
     </tr>
     </thead>
@@ -33,6 +34,7 @@
         <td><a href="{{ url.short_url }}" target="_blank">{{ url.short_url }}</a></td>
         <td>{{ url.original_url }}</td>
         <td>{{ url.created_at }}</td>
+        <td>{{ url.num_of_visits }}</td>
         <td>
             <!--copy button that copies current url +/short_url to clipboard-->
             <button class="btn btn-primary"

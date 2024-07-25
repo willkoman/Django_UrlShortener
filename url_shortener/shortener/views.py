@@ -78,6 +78,8 @@ def home(request):
 
 def redirect_url(request, short_url):
     url = get_object_or_404(URL, short_url=short_url)
+    url.num_of_visits += 1
+    url.save()
     return redirect(url.original_url)
 
 

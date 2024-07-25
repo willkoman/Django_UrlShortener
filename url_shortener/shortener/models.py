@@ -11,6 +11,7 @@ class URL(models.Model):
     created_by = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     qr_code = models.ImageField(upload_to='qr_codes', blank=True, null=True)
+    num_of_visits = models.IntegerField(default=0)
 
     def save(self, *args, **kwargs):
         host_url = kwargs.pop('host_url', 'http://localhost:8000/')
