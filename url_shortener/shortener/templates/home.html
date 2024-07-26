@@ -2,120 +2,132 @@
 {% load static %}
 {% block content %}
 
-<h1>URL Shortener</h1>
-<form method="post">
-    {% csrf_token %}
-    <input type="url" name="original_url" placeholder="Enter your URL" required>
-    <button type="submit" class="btn btn-primary">Shorten</button>
-</form>
-{% if short_url %}
-<p>Shortened URL: <a href="{{ short_url }}">{{ short_url }}</a></p>
-{% endif %}
-{% if urls %}
+    <h1>URL Shortener</h1>
+    <form method="post">
+        {% csrf_token %}
+        <input type="url" name="original_url" placeholder="Enter your URL" required>
+        <button type="submit" class="btn btn-primary">Shorten</button>
+    </form>
+    {% if short_url %}
+        <p>Shortened URL: <a href="{{ short_url }}">{{ short_url }}</a></p>
+    {% endif %}
+    {% if urls %}
 
-{% if username %}
-<h2>{{ username }}'s Shortened URLs</h2>
-{% else %}
-<h2>Anonymous Shortened URLs</h2>
-{% endif %}
-<table class="table">
-    <thead>
-    <tr>
-        <th>Shortened URL</th>
-        <th>Original URL</th>
-        <th>Created At</th>
-        <th>Visits</th>
-        <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for url in urls %}
-    <tr>
-        <td><a href="{{ url.short_url }}" target="_blank">{{ url.short_url }}</a></td>
-        <td>{{ url.original_url }}</td>
-        <td>{{ url.created_at }}</td>
-        <td>{{ url.num_of_visits }}</td>
-        <td>
+        {% if username %}
+            <h2>{{ username }}'s Shortened URLs</h2>
+        {% else %}
+            <h2>Anonymous Shortened URLs</h2>
+        {% endif %}
+        <table class="table table-striped table-bordered" id="urlsTable">
+            <thead>
+                <tr>
+                    <th>Shortened URL</th>
+                    <th>Original URL</th>
+                    <th>Created At</th>
+                    <th>Visits</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for url in urls %}
+                    <tr>
+                        <td><a href="{{ url.short_url }}" target="_blank">{{ url.short_url }}</a></td>
+                        <td>{{ url.original_url }}</td>
+                        <td>{{ url.created_at }}</td>
+                        <td>{{ url.num_of_visits }}</td>
+                        <td>
             <!--copy button that copies current url +/short_url to clipboard-->
-            <button class="btn btn-primary"
-                    onclick="showQRCodeModal('{{ request.build_absolute_uri }}{{ url.short_url }}', {% if url.qr_code %} '{{ url.qr_code.url }}' {% else %} '' {% endif %} )">
-                Copy
-            </button>
-            {% if username %}
-            <a href="/delete/{{ url.id }}" class="btn btn-danger">Delete</a>
-            {% endif %}
-        </td>
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
-{% endif %}
+                            <button class="btn btn-primary"
+                                    onclick="showQRCodeModal('{{ request.build_absolute_uri }}{{ url.short_url }}', {% if url.qr_code %} '{{ url.qr_code.url }}' {% else %} '' {% endif %} )">
+                                Copy
+                            </button>
+                            {% if username %}
+                                <a href="/delete/{{ url.id }}" class="btn btn-danger">Delete</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
 
 <!-- Modal HTML -->
-<div class="modal fade" id="qrCodeModal" tabindex="-1" aria-labelledby="qrCodeModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="qrCodeModalLabel">QR Code</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <img id="qrCodeImage" src="" alt="QR Code" width="200" class="d-block mx-auto">
-                <div class="input-group mt-3">
-                    <input type="text" class="form-control" id="shortUrlText" readonly>
-                    <button id="copyButton" type="button" class="btn btn-primary" onclick="copyToClipboard()">Copy</button>
+    <div class="modal fade" id="qrCodeModal" tabindex="-1" aria-labelledby="qrCodeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="qrCodeModalLabel">QR Code</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <div class="modal-body">
+                    <img id="qrCodeImage" src="" alt="QR Code" width="200" class="d-block mx-auto">
+                    <div class="input-group mt-3">
+                        <input type="text" class="form-control" id="shortUrlText" readonly>
+                        <button id="copyButton" type="button" class="btn btn-primary" onclick="copyToClipboard()">Copy</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
 
-<script>
-    function showQRCodeModal(shortUrl, qrCodeUrl) {
-        document.getElementById('qrCodeImage').src = qrCodeUrl;
-        document.getElementById('shortUrlText').value = shortUrl;
-        document.getElementById('copyButton').onclick = function () {
-            copyToClipboard(shortUrl);
-        };
-        var qrCodeModal = new bootstrap.Modal(document.getElementById('qrCodeModal'));
-        qrCodeModal.show();
-    }
+    <script>
 
-function copyToClipboard() {
-    const input = document.getElementById('shortUrlText');
-    if (input) {
-        if (navigator.clipboard && window.isSecureContext) {
-            // navigator.clipboard is available and the context is secure
-            navigator.clipboard.writeText(input.value).then(() => {
-                console.log('Text successfully copied to clipboard');
-            }).catch(err => {
-                console.error('Failed to copy text: ', err);
-            });
-        } else {
-            // Fallback method for older browsers
-            input.select();
-            try {
-                const successful = document.execCommand('copy');
-                if (successful) {
-                    console.log('Text successfully copied to clipboard');
-                } else {
-                    console.error('Failed to copy text');
+        $(document).ready(function () {
+            $('#urlsTable').DataTable(
+                {
+                    "order": [[2, "desc"]],
+                    "columnDefs": [
+                        {"orderable": false, "targets": 4}
+                    ]
                 }
-            } catch (err) {
-                console.error('Error copying text: ', err);
-            }
-            // Remove selection after copy
-            input.setSelectionRange(0, 0);
+            );
+        });
+
+        function showQRCodeModal(shortUrl, qrCodeUrl) {
+            document.getElementById('qrCodeImage').src = qrCodeUrl;
+            document.getElementById('shortUrlText').value = shortUrl;
+            document.getElementById('copyButton').onclick = function () {
+                copyToClipboard(shortUrl);
+            };
+            var qrCodeModal = new bootstrap.Modal(document.getElementById('qrCodeModal'));
+            qrCodeModal.show();
         }
-    }
-}
+
+        function copyToClipboard() {
+            const input = document.getElementById('shortUrlText');
+            if (input) {
+                if (navigator.clipboard && window.isSecureContext) {
+            // navigator.clipboard is available and the context is secure
+                    navigator.clipboard.writeText(input.value).then(() => {
+                        console.log('Text successfully copied to clipboard');
+                    }).catch(err => {
+                        console.error('Failed to copy text: ', err);
+                    });
+                } else {
+            // Fallback method for older browsers
+                    input.select();
+                    try {
+                        const successful = document.execCommand('copy');
+                        if (successful) {
+                            console.log('Text successfully copied to clipboard');
+                        } else {
+                            console.error('Failed to copy text');
+                        }
+                    } catch (err) {
+                        console.error('Error copying text: ', err);
+                    }
+            // Remove selection after copy
+                    input.setSelectionRange(0, 0);
+                }
+            }
+        }
 
 
 
 
-</script>
+    </script>
 {% endblock %}
