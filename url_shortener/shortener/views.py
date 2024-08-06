@@ -1,3 +1,4 @@
+import logging
 import random
 import string
 
@@ -7,6 +8,8 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, redirect, get_object_or_404
 
 from .models import URL
+
+logger = logging.getLogger(__name__)
 
 
 def generate_short_url():
@@ -77,10 +80,12 @@ def home(request):
 
 
 def redirect_url(request, short_url):
-    url = get_object_or_404(URL, short_url=short_url)
+    logger.debug(f"Received short URL: {short_url}")
+    url = get_object_or_404(URL, short_url=short_url.strip())
     url.num_of_visits += 1
     url.save()
-    return redirect(url.original_url)
+    logger.debug(f"Redirecting to: {url.original_url.strip()}")
+    return redirect(url.original_url.strip())
 
 
 # Requires user to be logged in
