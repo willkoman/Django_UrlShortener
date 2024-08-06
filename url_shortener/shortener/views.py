@@ -55,18 +55,24 @@ def logout(request):
 def home(request):
     context = {}
 
-    if request.method == "POST":
+    if request.method == "POST":  # Saving a new URL
         original_url = request.POST["original_url"]
         created_by = request.user.username if request.user.is_authenticated else "Anonymous"
 
-        # Generate a unique short URL
-        short_url = generate_short_url()
-        while URL.objects.filter(short_url=short_url).exists():
+        # if not logged in, and the url already exists, just return the short url
+        if not request.user.is_authenticated and URL.objects.filter(original_url=original_url).exists():
+            url = URL.objects.get(original_url=original_url)
+            context["short_url"] = request.build_absolute_uri("/") + url.short_url
+           
+        else:
+            # Generate a unique short URL
             short_url = generate_short_url()
+            while URL.objects.filter(short_url=short_url).exists():
+                short_url = generate_short_url()
 
-        url = URL(original_url=original_url, short_url=short_url, created_by=created_by)
-        url.save(host_url=request.build_absolute_uri("/"))
-        context["short_url"] = request.build_absolute_uri("/") + short_url
+            url = URL(original_url=original_url, short_url=short_url, created_by=created_by)
+            url.save(host_url=request.build_absolute_uri("/"))
+            context["short_url"] = request.build_absolute_uri("/") + short_url
 
     if request.user.is_authenticated:
         urls = URL.objects.filter(created_by=request.user.username)
